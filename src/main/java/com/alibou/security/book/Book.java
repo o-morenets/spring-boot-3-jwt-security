@@ -32,22 +32,15 @@ public class Book {
     private String isbn;
 
     @CreatedDate
-    @Column(
-            nullable = false,
-            updatable = false
-    )
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createDate;
 
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModified;
 
-
     @CreatedBy
-    @Column(
-            nullable = false,
-            updatable = false
-    )
+    @Column(nullable = false, updatable = false)
     private Integer createdBy;
 
     @LastModifiedBy
