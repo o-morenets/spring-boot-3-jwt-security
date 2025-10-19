@@ -8,8 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-import static com.alibou.security.user.Role.ADMIN;
-import static com.alibou.security.user.Role.MANAGER;
+import static com.alibou.security.user.Role.*;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")
@@ -26,7 +25,7 @@ public class SecurityApplication {
                     .firstname("Admin")
                     .lastname("Admin")
                     .email("admin@mail.com")
-                    .password("password")
+                    .password("admin$123")
                     .role(ADMIN)
                     .build();
             System.out.println("Admin token: " + service.register(admin).getAccessToken());
@@ -35,10 +34,19 @@ public class SecurityApplication {
                     .firstname("Manager")
                     .lastname("Manager")
                     .email("manager@mail.com")
-                    .password("password")
+                    .password("manager$123")
                     .role(MANAGER)
                     .build();
             System.out.println("Manager token: " + service.register(manager).getAccessToken());
+
+            var user = RegisterRequest.builder()
+                    .firstname("User")
+                    .lastname("User")
+                    .email("user@mail.com")
+                    .password("user$123")
+                    .role(USER)
+                    .build();
+            System.out.println("User token: " + service.register(user).getAccessToken());
         };
     }
 }

@@ -1,10 +1,6 @@
 package com.alibou.security.book;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +24,9 @@ public class Book {
     @Id
     @GeneratedValue
     private Integer id;
+
     private String author;
+
     private String isbn;
 
     @CreatedDate
