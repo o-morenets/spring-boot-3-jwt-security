@@ -122,9 +122,9 @@ Once the application is running, access the interactive API documentation:
 
 ### User Management
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| PATCH | `/api/v1/users` | Change user password | Yes |
+| Method | Endpoint                    | Description | Auth Required |
+|--------|-----------------------------|-------------|---------------|
+| PATCH | `/api/v1/users/me/password` | Change user password | Yes |
 
 ### Book Management (Sample Resource)
 
@@ -135,10 +135,10 @@ Once the application is running, access the interactive API documentation:
 
 ### Demo Endpoints (Role Testing)
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---------------|
-| GET | `/api/v1/demo-controller` | Public endpoint | Any authenticated user |
-| GET | `/api/v1/admin/**` | Admin endpoints | ADMIN |
+| Method | Endpoint               | Description | Required Role |
+|--------|------------------------|-------------|---------------|
+| GET | `/api/v1/demo`         | Public endpoint | Any authenticated user |
+| GET | `/api/v1/admin/**`     | Admin endpoints | ADMIN |
 | GET | `/api/v1/management/**` | Management endpoints | MANAGER |
 
 ## 🔑 Usage Examples
@@ -213,7 +213,7 @@ curl -X POST http://localhost:8080/api/v1/auth/refresh-token \
 ### 6. Change Password for current authenticated User
 
 ```bash
-curl -X PATCH http://localhost:8080/api/v1/users \
+curl -X PATCH http://localhost:8080/api/v1/users/me/password \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -258,6 +258,163 @@ The application supports hierarchical roles with specific permissions:
 **Permissions:**
 - `ADMIN_READ`, `ADMIN_UPDATE`, `ADMIN_CREATE`, `ADMIN_DELETE`
 - `MANAGER_READ`, `MANAGER_UPDATE`, `MANAGER_CREATE`, `MANAGER_DELETE`
+
+## 🎭 Managing User Authorities
+
+### How Roles and Authorities Work
+
+The application uses a flexible permission system where **roles contain sets of permissions**. Each user is assigned a role, and that role determines what authorities (permissions) they have.
+
+### Authority Structure
+
+When a user logs in, their role is converted into a list of authorities:
+
+| Role | Authorities Granted |
+|------|-------------------|
+| **USER** | `ROLE_USER` + custom permissions (if any) |
+| **MANAGER** | `ROLE_MANAGER` + `management:create`, `management:read`, `management:update`, `management:delete` |
+| **ADMIN** | `ROLE_ADMIN` + all admin permissions + all management permissions |
+
+### Adding/Removing Permissions from Roles
+
+To customize what permissions each role has, edit the `Role.java` enum:
+
+**Location:** `src/main/java/com/omore/security/user/Role.java`
+
+```java
+@Getter
+@RequiredArgsConstructor
+public enum Role {
+
+    USER(
+        Set.of(
+            // Add permissions here for USER role
+            // Example: ADMIN_CREATE, MANAGER_READ, etc.
+        )
+    ),
+    
+    ADMIN(
+        Set.of(
+            ADMIN_CREATE,
+            ADMIN_READ,
+            ADMIN_UPDATE,
+            ADMIN_DELETE,
+            MANAGER_CREATE,  // ADMIN also has MANAGER permissions
+            MANAGER_READ,
+            MANAGER_UPDATE,
+            MANAGER_DELETE
+        )
+    ),
+    
+    MANAGER(
+        Set.of(
+            MANAGER_CREATE,
+            MANAGER_READ,
+            MANAGER_UPDATE,
+            MANAGER_DELETE
+        )
+    );
+
+    private final Set<Permission> permissions;
+}
+```
+
+### Example: Give USER Role Admin Create Permission
+
+```java
+USER(
+    Set.of(
+        ADMIN_CREATE  // Now USER can create admin resources
+    )
+),
+```
+
+### Available Permissions
+
+All permissions are defined in `Permission.java`:
+
+```java
+public enum Permission {
+    ADMIN_CREATE("admin:create"),
+    ADMIN_READ("admin:read"),
+    ADMIN_UPDATE("admin:update"),
+    ADMIN_DELETE("admin:delete"),
+    MANAGER_CREATE("management:create"),
+    MANAGER_READ("management:read"),
+    MANAGER_UPDATE("management:update"),
+    MANAGER_DELETE("management:delete");
+}
+```
+
+### Security Configuration
+
+⚠️ **Important:** The `SecurityConfiguration.java` must use `.getPermission()` not `.name()`:
+
+```java
+// ✅ CORRECT:
+.requestMatchers(POST, "/api/v1/management/**")
+    .hasAnyAuthority(ADMIN_CREATE.getPermission(), MANAGER_CREATE.getPermission())
+
+// OR use strings directly:
+.requestMatchers(POST, "/api/v1/management/**")
+    .hasAnyAuthority("admin:create", "management:create")
+
+// ❌ WRONG (will not work):
+.requestMatchers(POST, "/api/v1/management/**")
+    .hasAnyAuthority(ADMIN_CREATE.name(), MANAGER_CREATE.name())
+```
+
+### Role vs Authority Checks
+
+**Role-based checks** (checks for `ROLE_*`):
+```java
+@PreAuthorize("hasRole('ADMIN')")  // Only users with ADMIN role
+```
+
+**Permission-based checks** (checks for specific permissions):
+```java
+@PreAuthorize("hasAuthority('admin:create')")  // Anyone with admin:create permission
+```
+
+### Best Practices
+
+1. **Use permissions for fine-grained control**: Check for specific permissions like `admin:read` instead of roles
+2. **Keep USER role minimal**: Only add permissions if absolutely necessary
+3. **ADMIN inherits MANAGER permissions**: This allows admins to access management endpoints
+4. **Restart required**: Changes to `Role.java` require application restart
+5. **Test after changes**: Always test permission changes with different user roles
+
+### Example Use Cases
+
+**Scenario 1: Give USER read-only access to management**
+```java
+USER(Set.of(MANAGER_READ))
+```
+
+**Scenario 2: Create a custom limited role**
+```java
+READONLY_ADMIN(
+    Set.of(
+        ADMIN_READ,
+        MANAGER_READ
+    )
+)
+```
+
+**Scenario 3: Remove permissions from ADMIN**
+```java
+ADMIN(
+    Set.of(
+        ADMIN_CREATE,
+        ADMIN_READ,
+        // Removed: ADMIN_UPDATE, ADMIN_DELETE
+        MANAGER_CREATE,
+        MANAGER_READ,
+        MANAGER_UPDATE,
+        MANAGER_DELETE
+    )
+)
+```
 
 ### Password Security
 
