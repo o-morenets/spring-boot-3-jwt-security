@@ -1,5 +1,9 @@
 package com.omore.security.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,55 +18,60 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleExpiredJwtException(ExpiredJwtException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleUnsupportedJwtException(UnsupportedJwtException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(MalformedJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleMalformedJwtException(MalformedJwtException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<Map<String, Object>> handleSignatureException(SignatureException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalStateException(IllegalStateException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-        errorResponse.put("error", "Bad Request");
-        errorResponse.put("message", ex.getMessage());
-        
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
-        errorResponse.put("error", "Unauthorized");
-        errorResponse.put("message", ex.getMessage());
-        
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ex) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.FORBIDDEN.value());
-        errorResponse.put("error", "Forbidden");
-        errorResponse.put("message", ex.getMessage());
-        
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(errorResponse);
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        errorResponse.put("error", "Internal Server Error");
-        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("status", status.value());
+        errorResponse.put("error", status.getReasonPhrase());
+        errorResponse.put("message", message);
         
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(status)
                 .body(errorResponse);
     }
 }
