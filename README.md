@@ -104,7 +104,10 @@ The application will start on **http://localhost:8080**
 Once the application is running, access the interactive API documentation:
 
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **Alternative Swagger URL**: http://localhost:8080/swagger-ui/index.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+
+> **Note**: Make sure the application is running and connected to the database before accessing Swagger UI. If you get a connection error, restart the application after starting the PostgreSQL container.
 
 ## 🔐 API Endpoints
 

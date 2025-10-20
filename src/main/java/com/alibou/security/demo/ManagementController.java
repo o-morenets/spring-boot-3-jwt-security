@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 public class ManagementController {
 
     @Operation(
-            description = "Get endpoint for manager",
-            summary = "This is a summary for management get endpoint",
+            summary = "Get endpoint for manager",
+            description = "Role `MANAGER` required",
             responses = {
                     @ApiResponse(
                             description = "Success",
@@ -20,6 +20,10 @@ public class ManagementController {
                     ),
                     @ApiResponse(
                             description = "Unauthorized / Invalid Token",
+                            responseCode = "401"
+                    ),
+                    @ApiResponse(
+                            description = "Forbidden",
                             responseCode = "403"
                     )
             }
@@ -29,16 +33,70 @@ public class ManagementController {
         return "GET:: management controller";
     }
 
+    @Operation(
+            summary = "Post endpoint for manager",
+            description = "Role `MANAGER` required",
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "Unauthorized / Invalid Token",
+                            responseCode = "401"
+                    ),
+                    @ApiResponse(
+                            description = "Forbidden",
+                            responseCode = "403"
+                    )
+            }
+    )
     @PostMapping
     public String post() {
         return "POST:: management controller";
     }
 
+    @Operation(
+            summary = "Put endpoint for manager",
+            description = "Role `MANAGER` required",
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "Unauthorized / Invalid Token",
+                            responseCode = "401"
+                    ),
+                    @ApiResponse(
+                            description = "Forbidden",
+                            responseCode = "403"
+                    )
+            }
+    )
     @PutMapping
     public String put() {
         return "PUT:: management controller";
     }
 
+    @Operation(
+            summary = "Delete endpoint for manager",
+            description = "Role `MANAGER` required",
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "Unauthorized / Invalid Token",
+                            responseCode = "401"
+                    ),
+                    @ApiResponse(
+                            description = "Forbidden",
+                            responseCode = "403"
+                    )
+            }
+    )
     @DeleteMapping
     public String delete() {
         return "DELETE:: management controller";

@@ -32,8 +32,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         final String servletPath = request.getServletPath();
+        
+        // Skip JWT processing for public endpoints
         if (servletPath.equals("/api/v1/auth/authenticate") ||
-                servletPath.equals("/api/v1/auth/refresh-token")) {
+                servletPath.equals("/api/v1/auth/refresh-token") ||
+                servletPath.startsWith("/v3/api-docs") ||
+                servletPath.startsWith("/swagger-ui") ||
+                servletPath.equals("/swagger-ui.html")) {
             filterChain.doFilter(request, response);
 
             return;
